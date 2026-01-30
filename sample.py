@@ -95,7 +95,7 @@ with torch.no_grad():
                 temperature=temperature,
                 top_k=top_k
             )
-
+            print(decode(y[0].tolist()))
             torch.cuda.synchronize()
             t1 = time.time()
 
