@@ -12,7 +12,7 @@ from model import GPTConfig, GPT
 init_from = 'gpt2' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
 out_dir = 'out' # ignored if init_from is not 'resume'
 start = "\n" # or "<|endoftext|>" or etc. Can also specify a file, use as: "FILE:prompt.txt"
-num_samples = 10 # number of samples to draw
+num_samples = 1 # number of samples to draw
 max_new_tokens = 2 # number of tokens generated in each sample
 temperature = 0.8 # 1.0 = no change, < 1.0 = less random, > 1.0 = more random, in predictions
 top_k = 200 # retain only the top_k most likely tokens, clamp others to have 0 probability
@@ -84,8 +84,28 @@ x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
 with torch.no_grad():
     with ctx:
         for k in range(num_samples):
+            torch.cuda.reset_peak_memory_stats()
+            torch.cuda.synchronize()
+
+            t0 = time.time()
+
+            y = model.generate(
+                x,
+                max_new_tokens,
+                temperature=temperature,
+                top_k=top_k
+            )
+
+            torch.cuda.synchronize()
+            t1 = time.time()
+
+            total_time = t1 - t0
+            num_out = y.shape[1] - x.shape[1]
+            time_per_token = total_time / num_out
+
             peak_mem = torch.cuda.max_memory_allocated() / 1024**2
-            print("Peak GPU memory (MB):", peak_mem)
-            y = model.generate(x, max_new_tokens, temperature=temperature, top_k=top_k)
-            print(decode(y[0].tolist()))
+
+            print(f"Total inference time (s): {total_time:.4f}")
+            print(f"Time per token (s): {time_per_token:.6f}")
+            print(f"Peak GPU memory (MB): {peak_mem:.2f}")
             print('---------------')
