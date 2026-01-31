@@ -58,8 +58,8 @@ class CausalSelfAttention(nn.Module):
 
         if kvcache:
             prev_k, prev_v = kvcache
-            k = torch.cat(prev_k, k,dim=1)
-            v = torch.cat(prev_v, v,dim=1)
+            k = torch.cat((prev_k, k), dim=1)
+            v = torch.cat((prev_v, v), dim=1)
         
         new_kvcache = [k,v]
         curr_T = k.shape[1]
