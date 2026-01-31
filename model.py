@@ -118,7 +118,8 @@ class Block(nn.Module):
         self.mlp = MLP(config)
 
     def forward(self, x,kvcache=None):
-        x = x + self.attn(self.ln_1(x), kvcache=kvcache)
+        attention, cache = self.attn(self.ln_1(x), kvcache=kvcache)
+        x = x + attention
         x = x + self.mlp(self.ln_2(x))
         return x
 
