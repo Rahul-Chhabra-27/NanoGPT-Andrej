@@ -8,6 +8,7 @@ import torch
 import tiktoken
 from model import GPTConfig, GPT
 import time
+
 # -----------------------------------------------------------------------------
 init_from = 'gpt2' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
 out_dir = 'out' # ignored if init_from is not 'resume'
@@ -83,17 +84,18 @@ x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
 # run generation
 with torch.no_grad():
     with ctx:
+        #  Initializing the KV caching to None
+        kvcache = None
         for k in range(num_samples):
             torch.cuda.reset_peak_memory_stats()
             torch.cuda.synchronize()
-
             t0 = time.time()
-
             y = model.generate(
                 x,
                 max_new_tokens,
                 temperature=temperature,
-                top_k=top_k
+                top_k=top_k,
+                kvcache=kvcache
             )
             print(decode(y[0].tolist()))
             torch.cuda.synchronize()
