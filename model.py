@@ -121,7 +121,7 @@ class Block(nn.Module):
         attention, cache = self.attn(self.ln_1(x), kvcache=kvcache)
         x = x + attention
         x = x + self.mlp(self.ln_2(x))
-        return x
+        return x, cache
 
 @dataclass
 class GPTConfig:
